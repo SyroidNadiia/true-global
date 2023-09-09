@@ -18,9 +18,8 @@
       "*": ["*", "src/*"]
     }
 
-    
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.png"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.png", "globals.d.ts"],
   "exclude": ["node_modules"],
   
 }

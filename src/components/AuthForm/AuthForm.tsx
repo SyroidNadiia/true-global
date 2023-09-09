@@ -24,8 +24,16 @@ const initialValues: AuthFormValues = {
   password: '',
 };
 
-const authSchema = Yup.object().shape({
-  name: Yup.string(),
+
+
+const AuthForm: React.FC<AuthFormProps> = ({ isRegistration }) => {
+  const formDistributor = {
+    passText: isRegistration ? 'Create a password' : 'Confirm your password',
+    buttText: isRegistration ? 'Register Now' : 'Log in Now',
+  };
+
+  const authSchema = Yup.object().shape({
+  name: isRegistration ? Yup.string() : Yup.string().strip(),
   email: Yup.string()
     .required('Email is required')
     .email('Invalid email address'),
@@ -38,79 +46,44 @@ const authSchema = Yup.object().shape({
     ),
 });
 
-const AuthForm: React.FC<AuthFormProps> = ({ isRegistration }) => {
+  const { handleSubmit, handleChange, handleBlur, values, errors, touched } =
+    useFormik<AuthFormValues>({
+      initialValues: initialValues,
+      onSubmit: async ({ name, email, password }, { resetForm }) => {
+        try {
+          if (isRegistration) {
+            await register({ name, email, password });
+          }
+
+          await logIn({ email, password });
+
+          resetForm();
+        } catch (error: any) {
+          if (error.response && error.response.status === 409) {
+            console.error('User already exists:', error.message);
+            Notiflix.Notify.failure('User with this email already exists');
+          } else {
+            console.error('An error occurred:', error.message);
+            Notiflix.Notify.failure('An error occurred');
+          }
+        }
+      },
+      validationSchema: authSchema,
+    });
+
   useEffect(() => {
-    async function breakFormikInputs() {
-      await setValues({
-        name: initialValues.name,
-        email: initialValues.email,
-        password: initialValues.password,
-      });
+    if (isRegistration) {
+      // Скидання значень полів форми для реєстрації
+      values.name = initialValues.name;
     }
-    async function breakFormikTouched() {
-      await setTouched({
-        name: false,
-        email: false,
-        password: false,
-      });
-    }
-
-    breakFormikInputs();
-    breakFormikTouched();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRegistration]);
-
-  const onHandleSubmit = async (
-    { name, email, password }: AuthFormValues,
-    { resetForm }: { resetForm: () => void }
-  ) => {
-    try {
-      if (isRegistration) {
-        await register({ name, email, password });
-      }
-
-      await logIn({ email, password });
-
-      resetForm();
-    } catch (error: any) {
-      if (error.response && error.response.status === 409) {
-        console.error('User already exists:', error.message);
-        Notiflix.Notify.failure('User with this email already exists');
-        // Обробляйте помилку 409 (користувач вже існує) тут
-      } else {
-        console.error('An error occurred:', error.message);
-        Notiflix.Notify.failure('An error occurred');
-        // Обробляйте інші помилки тут
-      }
-    }
-  };
-
-  const formDistributor = {
-    passText: isRegistration ? 'Create a password' : 'Confirm your password',
-    buttText: isRegistration ? 'Register Now' : 'Log in Now',
-  };
-
-  const {
-    handleSubmit,
-    handleChange,
-    handleBlur,
-    values,
-    errors,
-    touched,
-    setValues, // Додайте це
-    setTouched, // Додайте це
-  } = useFormik<AuthFormValues>({
-    initialValues: initialValues,
-    onSubmit: onHandleSubmit,
-    validationSchema: authSchema,
-  });
+  }, [isRegistration, values]);
 
   return (
     <AuthFormStyle onSubmit={handleSubmit}>
       {isRegistration && (
         <Input
           name="name"
-          type="text" // Змінено на "text"
+          type="text"
           placeholder="Enter your name"
           onChange={handleChange}
           onBlur={handleBlur}
@@ -118,7 +91,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ isRegistration }) => {
         />
       )}
       {isRegistration && errors.name && touched.name ? (
-        <span style={{ color: 'white' }}>{errors.name}</span>
+        <span style={{ color: 'red' }}>{errors.name}</span>
       ) : null}
 
       <Input
@@ -130,7 +103,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ isRegistration }) => {
         value={values.email}
       />
       {errors.email && touched.email ? (
-        <span style={{ color: 'white' }}>{errors.email}</span>
+        <span style={{ color: 'red' }}>{errors.email}</span>
       ) : null}
 
       <Input
@@ -142,7 +115,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ isRegistration }) => {
         value={values.password}
       />
       {errors.password && touched.password ? (
-        <span style={{ color: 'white' }}>{errors.password}</span>
+        <span style={{ color: 'red' }}>{errors.password}</span>
       ) : null}
 
       <Button type="submit">{formDistributor.buttText}</Button>

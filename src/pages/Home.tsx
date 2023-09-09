@@ -1,6 +1,6 @@
 import { Typography } from '@mui/material';
-import { StyledHome } from './sharedStyles.styled';
-// import { task } from '../images/task.png';
+import { StyledHome, TaskImage } from './sharedStyles.styled';
+import task from '../images/task.png';
 
 function Home() {
   return (
@@ -9,7 +9,7 @@ function Home() {
       <Typography variant="body1">
         Your Task Manager is here to supercharge your day.
       </Typography>
-      {/* <TaskImage src={task} alt="Task list" /> */}
+      <TaskImage src={task} alt="Task list" />
     </StyledHome>
   );
 }
